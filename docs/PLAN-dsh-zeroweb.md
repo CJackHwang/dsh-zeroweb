@@ -1,9 +1,9 @@
 # PLAN: dsh-zeroweb — dsh 纯静态浏览器移植（v1.0）
 
-> **Status**: 执行基线（2026-08-13 仓库已初始化）
+> **Status**: 执行基线（2026-08-13 仓库已初始化，M0 完成，M1 待派发）
 > **执行者**: AI agent（用户派 CC）+ 技术团队。审阅者: Hermes（沈知夏）。
 > **前置**: Succinix 0.6.0（S0-S3，`~/Desktop/MyProject/Succinix/docs/PLAN-dsh-native.md`）提供 dsh 标准服务面；官方 dsh 锁 0.1.0-rc.6。
-> **权威依据**: dsh 官方仓库 + npm 发布物（全部实测存在 2026-08-13）
+> **权威依据**: dsh 官方仓库 + npm 发布物（全部实测存在 2026-08-13，见 §3.1）
 
 ---
 
@@ -61,22 +61,57 @@ graph TD
 9. SunamAI 侧 dsh 对齐计划（姊妹计划）: `~/Desktop/MyProject/SunamAI/docs/PLAN-dsh-web.md`（A0-A3；fork 同步策略、webcrypto shim、npm alias 全链路）
 10. Succinix 开发细节: `~/Desktop/MyProject/Succinix/docs/SDK.md`、AGENTS.md（文件 RPC 协议、TerminalExecutor 路由、快照持久化、门禁命令）
 
+## 3.1 npm 发布物实测清单（2026-08-13 实测，写作铁律：地址必须实测存在）
+
+| 包 | 版本 | 形态 |
+|---|---|---|
+| `@deepseek-ai/dsh` | 0.1.0-rc.6 | 官方 CLI（`dsh web` → localhost:3080） |
+| `@deepseek-ai/dsh-web-frontend` | 0.0.1-rc.5 | apps/web 发布物（Vite + React 18） |
+| `@deepseek-ai/dsh-client-web` | 0.0.1-rc.1 | client shell 库（**无 ./client 导出**，非插件） |
+| `@deepseek-ai/dsh-client-modules` | 0.0.1-rc.1 | 浏览器模块加载器（internal 契约可替换） |
+| `@deepseek-ai/dsh-client-hmr` | 0.0.1-rc.1 | 热更新驱动 |
+| `@deepseek-ai/dsh-client-ui-theme` | 0.0.1-rc.1 | **有 `exports["./client"]`（lib/client.js）→ client 插件形态，M1c 用它测** |
+| `@deepseek-ai/dsh-agent` / `dsh-agent-loop` | 0.1.0-rc.6 | agent 接口 / loop 实现 |
+| `@deepseek-ai/dsh-tool-fs` | 0.0.1-rc.1 | **host 插件（exports 无 ./client）→ 走 Cordis ctx 注册，非 ClientModuleLoader** |
+
+**插件双轨道（2026-08-13 源码实测结论，M1 的架构前提）**：
+- **host 插件**（dsh-tool-fs 等）：纯 ctx 服务消费者，跑在 agent 侧 Cordis 容器（浏览器 bundle 或 WC 内），不经过 ClientModuleLoader → M1a/M1b 验证
+- **client 插件**（ui-*、dsh-web-ui 生态）：带 `exports["./client"]`，走 ClientModuleLoader 浏览器加载 → M1c/M1d 验证
+
+**CDN 候选实测（2026-08-13）**：
+- `https://esm.sh/<pkg>?cjs`：HTTP 200 但返回 **ESM 包装**（`export * from`），非纯 CJS → T1.4 需实测 `?format=cjs` 或 jsdelivr 直链
+- `https://cdn.jsdelivr.net/npm/<pkg>@<ver>/`：直链 npm 包内文件（lib/client.js 等）
+- `https://data.jsdelivr.com/v1/packages/npm/<pkg>@<ver>`：文件树 JSON API（实测可用）
+
 ## 4. 里程碑（顺序 TASK 表，无时间排程）
 
 ### M0: 仓库基线 ✅（已由 Hermes 完成）
-- 仓库初始化、README（非官方声明）、.gitignore、package.json（pnpm workspace 骨架）
+- 仓库初始化、README（非官方声明）、.gitignore、package.json（npm workspaces 骨架，M0 空 workspace 门禁已绿）
 - 门禁: `git log` 干净、README 非官方声明在头行
 
-### M1: POC 验证命脉（四个验证点，可并行，全部要真实执行）
-- **M1a** WC 内 dsh boot: 在 WebContainer 沙箱（Succinix 环境或最小复现）`npm i @deepseek-ai/dsh@0.1.0-rc.6` → boot agent loop → 真实跑一轮对话 + 工具调用。门禁: agent 响应 + 工具结果真实返回。
-- **M1b** 零 WC 下限: 浏览器 bundle 内 Cordis（@deepseek-ai/cordis）+ dsh agent 36 包 + webcrypto shim，ctx 实现接 OPFS/Lifo（不 boot WebContainer）。门禁: 一轮对话 + 一次 fs 工具调用走 OPFS。
-- **M1c** 官方模块加载器纯静态加载: `ClientModuleLoader` + 官方插件 tsdown 构建的 `.client.js` bundle，在纯静态页面加载并注册（不走 Node host `/plugins`）。门禁: 插件 factory 注册 + materialize 成功，boot graph 自举。
-- **M1d** 市场层 CDN: esm.sh `?cjs` 产物能否被 `ClientModuleLoader` 消费。门禁: 远程 bundle 注册 + materialize。
-- 另验: DeepSeek API 浏览器直连 CORS 头（不行则记代理方案）。
+### M1: POC 验证命脉（拆 TASK，全部要真实执行，浏览器验证不许 mock）
 
-### M2: 装配（依赖 M1 至少一条命脉 + Succinix 0.6.0）
-- connection 实现替换（浏览器内传输）、agent 宿主适配、Succinix 服务面接线、boot graph 生成脚本
-- 门禁: 官方 UI 完整渲染 + dsh agent 在 Succinix 环境跑通杀手场景（写文件 → 跑命令 → 起服务 → 预览）
+| TASK | 内容 | 依赖 | 门禁 |
+|---|---|---|---|
+| **T1.1** (M1a) | WC 内 dsh boot：`apps/poc/wc/` 最小复现页（@webcontainer/api boot + COOP/COEP），容器内 `npm i @deepseek-ai/dsh@0.1.0-rc.6`，用 dsh-agent + dsh-agent-loop + ctx.agents 跑一轮对话 + 一次工具调用（dsh-tool-fs） | 无 | agent 响应真实 + 工具真实执行（写/读文件有结果）；记录装包体积与 boot 耗时 |
+| **T1.2** (M1b) | 零 WC 下限：`apps/poc/browser/` Vite 页，bundle 内 Cordis（@deepseek-ai/cordis）+ dsh-agent 36 包 + **webcrypto shim**（node:crypto→crypto.subtle），自写 ctx 实现：fs→OPFS、llm→浏览器 fetch；**同时验证 DeepSeek API 浏览器直连 CORS** | 无（与 T1.1 并行） | 一轮对话 + 一次 fs 工具调用走 OPFS 成功；CORS 结论写入 T1.5 |
+| **T1.3** (M1c) | 官方模块加载器：`@deepseek-ai/dsh-client-modules`（internal 契约）在纯静态页装配，加载 `@deepseek-ai/dsh-client-ui-theme` 的 `./client`（lib/client.js）→ factory 注册 + materialize；理解 boot graph 自举方式 | 无（可先于 T1.4） | 官方 client 插件 bundle 纯静态注册成功，无 Node host 参与 |
+| **T1.4** (M1d) | 市场层 CDN：实测三候选——a) esm.sh `?format=cjs`；b) jsdelivr 直链 npm 包内 lib/client.js；c) 市场清单要求插件发布物含官方 `./client` 产物（tsdown 原生就是 CJS）。选一跑通 | T1.3 | 远程 bundle 注册 + materialize 成功；结论与选型写入 T1.5 |
+| **T1.5** | M1 汇总：四验证点结论 + **命脉决策**（执行层 = WC 主 / 浏览器原生主 / 双轨）+ 插件双轨道兼容矩阵初版 + CORS 结论 | T1.1-T1.4 | 决策写入 `docs/decisions/`，PLAN §1 相应更新 |
+
+TASK 参考（全部实测存在）：
+- T1.1: `@webcontainer/api`（npm）、官方 `docs/user/guide/index.md`、Succinix host 复现 `~/Desktop/MyProject/Succinix/src/engine/`（TerminalExecutor 模式）
+- T1.2: `@deepseek-ai/dsh-agent@0.1.0-rc.6` / `dsh-agent-loop@0.1.0-rc.6` / `@deepseek-ai/cordis@4.0.1`（npm）、MDN Web Crypto API、PLAN-dsh-web.md §A2（webcrypto shim 先例）
+- T1.3: `@deepseek-ai/dsh-client-modules@0.0.1-rc.1`（npm）、官方 `packages/client/modules/README.md` + `packages/client/modules/src/`（internal 契约）、`@deepseek-ai/dsh-client-ui-theme@0.0.1-rc.1`（exports ./client 已实测）
+- T1.4: esm.sh / jsdelivr（§3.1 实测结论）
+
+### M2: 装配（依赖 M1 命脉决策 + Succinix 0.6.0）
+| TASK | 内容 | 门禁 |
+|---|---|---|
+| **T2.1** | connection 传输替换：读官方 `packages/client/connection/README.md` + src 确认注入点 → 实现浏览器内传输（进程内 Cordis ctx / 文件 RPC → Succinix） | 官方 UI 经新传输渲染完整 |
+| **T2.2** | agent 宿主：bundle 内 Cordis 容器装配 dsh agent 插件族 + webcrypto shim + LLM provider | 一轮对话 + 工具调用走通 |
+| **T2.3** | Succinix 服务面接线：消费 `ctx.fs/sandbox/terminals/sessionPersistence`（依赖 0.6.0 S0-S3；未落地则 0.5.0 `ctx.succinix.*` 临时适配，T1.5 决策定） | 杀手场景：写文件 → 跑命令 → 起服务 → 预览 |
+| **T2.4** | boot graph 生成脚本（构建期：启用插件清单 + bundle 哈希 → `window.__DSH_BOOT__`）+ 官方 UI 薄壳装配 | `npm run build` 出静态产物，打开即用 |
 
 ### M2.5: 主题插件（项目特色，可与 M2 并行）
 - **T-THEME**: `dsh-zeroweb-theme` client 插件骨架（官方 client 插件形态: exports["./client"] + apply/inject + ui-slots register）。**枚举官方 5 个 token sheet（base/design-platform/scrollbar/gradient-shadow-text/shiki）全量 `--dsw-*` 清单** → 深浅两套全量 override → 琥珀暖色家族（dark: #0a0a0a/#c2702a/#d6cfc4；light: 暖米纸 + 深暖墨 + 深琥珀强调，light 下琥珀橙须满足 WCAG 对比度）。门禁: 深浅切换无残留官方色（逐 token diff）
