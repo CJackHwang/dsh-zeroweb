@@ -1,19 +1,19 @@
-# DSH-Zero
+# dsh-zeroweb
 
 **dsh 的纯静态浏览器发行版** — DeepSeek Harness in your browser. No install. No server. Open a URL and go.
 
 > [!IMPORTANT]
-> **DSH-Zero 是第三方社区移植项目，与 DeepSeek 无关。**
+> **dsh-zeroweb 是第三方社区移植项目，与 DeepSeek 无关。**
 > 基于 MIT 开源的 [deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 构建，
 > 非 DeepSeek 官方产品，未获 DeepSeek 认可或背书。
 
 ## What is this
 
 Official DSH Web UI runs as a local Node service (`npx @deepseek-ai/dsh web`, localhost:3080).
-DSH-Zero removes the Node requirement entirely:
+dsh-zeroweb removes the Node requirement entirely:
 
 ```
-Open dsh-zero.vercel.app
+Open dsh-zeroweb.vercel.app
   → browser boots a Succinix browser-native Linux sandbox (zero install)
   → dsh agent core runs inside: write code, run commands, serve apps, install packages
   → close the tab when done; data lives in the browser (or export it)
@@ -52,7 +52,7 @@ official client stack is reused as-is.
 
 ## Status
 
-- 2026-08-13: Repository scaffolded. Planning in `docs/PLAN-dsh-zero.md`.
+- 2026-08-13: Repository scaffolded. Planning in `docs/PLAN-dsh-zeroweb.md`.
 - Pending: M1 POC (dsh agent boot inside browser execution worlds).
 
 ## Upstream sync
@@ -71,5 +71,5 @@ official client stack is reused as-is.
 ## Repos
 
 - Upstream: https://github.com/deepseek-ai/deepseek-harness
-- This project: https://github.com/CJackHwang/dsh-zero
+- This project: https://github.com/CJackHwang/dsh-zeroweb
 - Succinix (execution world): https://github.com/CJackHwang/Succinix
