@@ -19,7 +19,8 @@
 4. **agent 核心 = dsh 官方包**：36 包闭包（agent-loop/goal/session/subagent/compaction），纯逻辑，唯一 Node 依赖 node:crypto → webcrypto shim。同步 = npm 版本升级（锁 rc.6 + 每两周复核）。
 5. **纯静态部署**：Vercel（COOP/COEP 头，参考 SunamAI 已验证配置）。零服务器。
 6. **插件三层**：内置（构建期打包）/ 市场（运行时 CDN，esm.sh）+ 热装 / WC 可选（真 npm install）。
-7. **单轨铁律**：不维护双套 API。dsh 官方服务键 = 唯一命名空间。
+7. **主题插件 = 项目特色（2026-08-13 拍板）**：`@dsh-zero/theme`（client 插件，走官方 ui-theme/ui-slots 扩展点），**深浅双模式全量适配**（light/dark 两套 `--dsw-alias-*` token 全覆盖，官方 ThemeRuntime 三态管理照用）；视觉 = 琥珀暖色家族（与 Succinix 执行层同族：dark 黑 #0a0a0a + 琥珀橙 #c2702a + 暖白 #d6cfc4；light 暖米纸色 + 深暖墨 + 深琥珀强调，**浅色也是暖色系**，与官方冷白区分）；移动端响应式覆盖（<768px 单栏 + 抽屉）；克制动画（View Transitions + prefers-reduced-motion 尊重）。官方已知限制：第三方主题 override 无完整性校验 → 必须枚举 token 全量覆盖，漏一个残留官方色。
+8. **单轨铁律**：不维护双套 API。dsh 官方服务键 = 唯一命名空间。
 
 ## 2. 架构
 
@@ -76,6 +77,12 @@ graph TD
 ### M2: 装配（依赖 M1 至少一条命脉 + Succinix 0.6.0）
 - connection 实现替换（浏览器内传输）、agent 宿主适配、Succinix 服务面接线、boot graph 生成脚本
 - 门禁: 官方 UI 完整渲染 + dsh agent 在 Succinix 环境跑通杀手场景（写文件 → 跑命令 → 起服务 → 预览）
+
+### M2.5: 主题插件（项目特色，可与 M2 并行）
+- **T-THEME**: `@dsh-zero/theme` client 插件骨架（官方 client 插件形态: exports["./client"] + apply/inject + ui-slots register）。**枚举官方 5 个 token sheet（base/design-platform/scrollbar/gradient-shadow-text/shiki）全量 `--dsw-*` 清单** → 深浅两套全量 override → 琥珀暖色家族（dark: #0a0a0a/#c2702a/#d6cfc4；light: 暖米纸 + 深暖墨 + 深琥珀强调，light 下琥珀橙须满足 WCAG 对比度）。门禁: 深浅切换无残留官方色（逐 token diff）
+- **T-MOBILE**: <768px 响应式覆盖（sidebar → 抽屉、details → 全屏/底部抽屉、conversation 全宽、触控 ≥44px、safe-area-inset、theme-color 跟随）。前置: 抓官方 AppFrame 真实 DOM 结构确认稳定（POC 验证点）。门禁: 375px 视口实测布局完整可用
+- **T-MOTION**: View Transitions API 面板/页面过渡 + 消息进入动画 + hover 微反馈；尊重 prefers-reduced-motion。门禁: 动画开关可全局禁用、无闪烁
+- 发布形态: 内置层随站打包 + npm 发布（第三方 dsh web 用户可装）
 
 ### M3: 发布
 - Vercel 静态部署（COOP/COEP）、README 完善、非官方声明、CI（兼容矩阵 + Renovate）
