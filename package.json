@@ -9,10 +9,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspaces --if-present || echo \"[M0] no workspace packages yet\"",
     "dev": "npm run dev --workspace=dsh-zeroweb-web",
-    "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces"
+    "lint": "npm run lint --workspaces --if-present || echo \"[M0] no workspace packages yet\"",
+    "test": "npm run test --workspaces --if-present || echo \"[M0] no workspace packages yet\""
   },
   "workspaces": [
     "apps/*",

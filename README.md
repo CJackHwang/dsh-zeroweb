@@ -1,4 +1,4 @@
-# Zeroweb
+# DSH-Zeroweb
 
 **dsh-zeroweb** — dsh 的纯静态浏览器发行版 — DeepSeek Harness in your browser. No install. No server. Open a URL and go.
 
