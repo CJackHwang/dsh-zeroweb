@@ -5,15 +5,14 @@
   "description": "dsh (DeepSeek Harness) static browser edition — zero install, zero server, Succinix-powered execution world. Unofficial third-party port.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm --filter @dsh-zero/web dev",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspace=@dsh-zero/web",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
   },
   "workspaces": [
     "apps/*",
