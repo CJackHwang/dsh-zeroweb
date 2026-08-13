@@ -85,6 +85,8 @@ graph TD
 
 ## 4. 里程碑（顺序 TASK 表，无时间排程）
 
+> **执行节奏（2026-08-13 用户拍板）**：双线并行——Succinix 0.6.0（S0-S3）优先攻坚（dsh-zeroweb T2.3 与 SunamAI A1 的共同咽喉），dsh-zeroweb M1 POC 同步推进（不依赖 Succinix）；两线汇合于 M2 装配。Succinix 侧规格源：`~/Desktop/MyProject/Succinix/docs/PLAN-dsh-native.md`。
+
 ### M0: 仓库基线 ✅（已由 Hermes 完成）
 - 仓库初始化、README（非官方声明）、.gitignore、package.json（npm workspaces 骨架，M0 空 workspace 门禁已绿）
 - 门禁: `git log` 干净、README 非官方声明在头行
